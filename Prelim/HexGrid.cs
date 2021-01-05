@@ -4,6 +4,9 @@ using System.Text;
 
 namespace HexBaronCS
 {
+    /// <summary>
+    /// A class representing the grid
+    /// </summary>
     class HexGrid
     {
         protected List<Tile> tiles = new List<Tile>();
@@ -11,6 +14,10 @@ namespace HexBaronCS
         int size;
         bool player1Turn;
 
+        /// <summary>
+        /// Initialises the grid with size <paramref name="n"/>, and default values for other
+        /// </summary>
+        /// <param name="n">Size of grid</param>
         public HexGrid(int n)
         {
             size = n;
@@ -19,16 +26,28 @@ namespace HexBaronCS
             player1Turn = true;
         }
 
+        /// <summary>
+        /// Sets up the grid terrain given a list <paramref name="listOfTerrain"/>
+        /// </summary>
+        /// <param name="listOfTerrain">List of terrain</param>
         public void SetUpGridTerrain(List<string> listOfTerrain)
         {
+            //for each string in terrain, set the corresponding tiles terrain to it
             for (int count = 0; count < listOfTerrain.Count; count++)
             {
                 tiles[count].SetTerrain(listOfTerrain[count]);
             }
         }
 
+        /// <summary>
+        /// Adds a piece to the grid, with ownership given by <paramref name="belongsToPlayer1"/>, type <paramref name="typeOfPiece"/> and location <paramref name="location"/>
+        /// </summary>
+        /// <param name="belongsToPlayer1">Ownership bool, true for player1</param>
+        /// <param name="typeOfPiece">Type of piece</param>
+        /// <param name="location">Location of piece</param>
         public void AddPiece(bool belongsToPlayer1, string typeOfPiece, int location)
         {
+            ///sets the piece to the correct type given by typeOfPiece
             Piece newPiece;
             if (typeOfPiece == "Baron")
             {
@@ -46,18 +65,33 @@ namespace HexBaronCS
             {
                 newPiece = new Piece(belongsToPlayer1);
             }
+
+            //adds to pieces and set tile
             pieces.Add(newPiece);
             tiles[location].SetPiece(newPiece);
         }
 
+        /// <summary>
+        /// Executes a given command
+        /// </summary>
+        /// <param name="items">Items in command</param>
+        /// <param name="fuelChange">Fuel change variable</param>
+        /// <param name="lumberChange">Lumber change variable</param>
+        /// <param name="supplyChange">Supply change variable</param>
+        /// <param name="fuelAvailable">Fuel available</param>
+        /// <param name="lumberAvailable">Lumber available</param>
+        /// <param name="piecesInSupply">Pieces in supply</param>
+        /// <returns>String indicating success</returns>
         public string ExecuteCommand(List<string> items, ref int fuelChange, ref int lumberChange,
                                      ref int supplyChange, int fuelAvailable, int lumberAvailable,
                                      int piecesInSupply)
         {
+            //switch based on the first item in command
             switch (items[0])
             {
                 case "move":
                     {
+                        //if move, execute move command
                         int fuelCost = ExecuteMoveCommand(items, fuelAvailable);
                         if (fuelCost < 0)
                         {
@@ -96,15 +130,27 @@ namespace HexBaronCS
             return "Command executed";
         }
 
+        /// <summary>
+        /// Checks whether an index lies in the grid
+        /// </summary>
+        /// <param name="tileToCheck">Index of tile</param>
+        /// <returns>Boolean indicating validity</returns>
         private bool CheckTileIndexIsValid(int tileToCheck)
         {
             return tileToCheck >= 0 && tileToCheck < tiles.Count;
         }
 
+        /// <summary>
+        /// Checks whether piece AND tile index is valid
+        /// </summary>
+        /// <param name="tileToUse">Tile to check</param>
+        /// <returns>Bool indicating validity</returns>
         private bool CheckPieceAndTileAreValid(int tileToUse)
         {
+            //check if index is valid
             if (CheckTileIndexIsValid(tileToUse))
             {
+                //gets piece and check the data makes sense
                 Piece thePiece = tiles[tileToUse].GetPieceInTile();
                 if (thePiece != null)
                 {
@@ -117,28 +163,51 @@ namespace HexBaronCS
             return false;
         }
 
+        /// <summary>
+        /// Executes a given command <paramref name="items"/> 
+        /// </summary>
+        /// <param name="items">Command items</param>
+        /// <param name="fuel">Fuel variable</param>
+        /// <param name="lumber">Lumber variable</param>
+        /// <returns>Bool indicating success</returns>
         private bool ExecuteCommandInTile(List<string> items, ref int fuel, ref int lumber)
         {
+            //gets tile from second command item, returns false if invalid position
             int tileToUse = Convert.ToInt32(items[1]);
             if (CheckPieceAndTileAreValid(tileToUse) == false)
             {
                 return false;
             }
+
+            //gets the piece in the tile
             Piece thePiece = tiles[tileToUse].GetPieceInTile();
+
+            //capitalises first character of first command item
             items[0] = items[0][0].ToString().ToUpper() + items[0].Substring(1);
+
+            //checks if the piece class has a method given by the first command item
             if (thePiece.HasMethod(items[0]))
             {
+                //gets the methods name and type of piece
                 string methodToCall = items[0];
                 Type t = thePiece.GetType();
+
+                //find the actual method of that name in that type
                 System.Reflection.MethodInfo method = t.GetMethod(methodToCall);
+                //gets parametesr from the tile
                 object[] parameters = { tiles[tileToUse].GetTerrain() };
+
+                //if saw command, invoke the saw command via reflection and add to lumber
                 if (items[0] == "Saw")
                 {
                     lumber += Convert.ToInt32(method.Invoke(thePiece, parameters));
                 }
+                //if dig command, invoke dig command via reflection and add to fuel
                 else if (items[0] == "Dig")
                 {
                     fuel += Convert.ToInt32(method.Invoke(thePiece, parameters));
+
+                    //if fuel is greater than 2 or less than -2, clear the terrain in the tile
                     if (Math.Abs(fuel) > 2)
                     {
                         tiles[tileToUse].SetTerrain(" ");
