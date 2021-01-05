@@ -218,48 +218,78 @@ namespace HexBaronCS
             return false;
         }
 
+        /// <summary>
+        /// Executes a given move command given by <paramref name="items"/>
+        /// </summary>
+        /// <param name="items">Command</param>
+        /// <param name="fuelAvailable">Fuel available</param>
+        /// <returns>Int indicating fuel usage, -1 if invalid</returns>
         private int ExecuteMoveCommand(List<string> items, int fuelAvailable)
         {
+            //find the start and end tiles, check both tiles are valid
             int startID = Convert.ToInt32(items[1]);
             int endID = Convert.ToInt32(items[2]);
             if (!CheckPieceAndTileAreValid(startID) || !CheckTileIndexIsValid(endID))
             {
                 return -1;
             }
+
+            //finds the piece at start, check it's valid piece
             Piece thePiece = tiles[startID].GetPieceInTile();
             if (tiles[endID].GetPieceInTile() != null)
             {
                 return -1;
             }
+
+            //find the distance between the two tiles, and calculates fuel usage
             int distance = tiles[startID].GetDistanceToTileT(tiles[endID]);
             int fuelCost = thePiece.CheckMoveIsValid(distance, tiles[startID].GetTerrain(), tiles[endID].GetTerrain());
+            //if not enough fuel available (or invalid), return -1
             if (fuelCost == -1 || fuelAvailable < fuelCost)
             {
                 return -1;
             }
+
+            //move the piece and return fuelCost
             MovePiece(endID, startID);
             return fuelCost;
         }
 
+        /// <summary>
+        /// Executes a spawn command given by <paramref name="items"/>
+        /// </summary>
+        /// <param name="items">Command</param>
+        /// <param name="lumberAvailable">Lumber available</param>
+        /// <param name="piecesInSupply">Pieces in supply</param>
+        /// <returns>Int representing lumber usage, -1 for invalid</returns>
         private int ExecuteSpawnCommand(List<string> items, int lumberAvailable, int piecesInSupply)
         {
+            //find the index of the tile from command
             int tileToUse = Convert.ToInt32(items[1]);
+            //checks if piecesInSupply is greater than 1, more than 3 lumber available and tile is valid
             if (piecesInSupply < 1 || lumberAvailable < 3 || !CheckTileIndexIsValid(tileToUse))
             {
                 return -1;
             }
+            
+            //gets the piece and checks if valid
             Piece ThePiece = tiles[tileToUse].GetPieceInTile();
             if (ThePiece != null)
             {
                 return -1;
             }
+
+            //makes a bool indicating whether own baron is neighbour and gets a list of neighbours
             bool ownBaronIsNeighbour = false;
             List<Tile> listOfNeighbours = new List<Tile>(tiles[tileToUse].GetNeighbours());
+            //iterates through each neighbour
             foreach (var n in listOfNeighbours)
             {
+                //gets the piece, if piece isn't null
                 ThePiece = n.GetPieceInTile();
                 if (ThePiece != null)
                 {
+                    //checks if neighbour is baron - and if so, set ownBaronIsNeighbour to true and break
                     if (player1Turn && ThePiece.GetPieceType() == "B" || !player1Turn && ThePiece.GetPieceType() == "b")
                     {
                         ownBaronIsNeighbour = true;
@@ -267,18 +297,31 @@ namespace HexBaronCS
                     }
                 }
             }
+
+            //if baron is not neighbour, invalid move
             if (!ownBaronIsNeighbour)
             {
                 return -1;
             }
+
+            //create a new piece and add to the correct tile
             Piece newPiece = new Piece(player1Turn);
             pieces.Add(newPiece);
             tiles[tileToUse].SetPiece(newPiece);
+
+            //return 3 - for lumber cost
             return 3;
         }
 
+        /// <summary>
+        /// Executes an upgrade command given by <paramref name="items"/>
+        /// </summary>
+        /// <param name="items">Command</param>
+        /// <param name="lumberAvailable">Lumber available</param>
+        /// <returns>Int representing lumber cost, -1 for invalid</returns>
         private int ExecuteUpgradeCommand(List<string> items, int lumberAvailable)
         {
+            //gets the tile, checks if it's valid, more than 5 lumber available and piece is either pbds or less
             int tileToUse = Convert.ToInt32(items[2]);
             if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less"))
             {
@@ -286,11 +329,16 @@ namespace HexBaronCS
             }
             else
             {
+                //fetches piece from grid
                 Piece thePiece = tiles[tileToUse].GetPieceInTile();
+
+                //if piece is "S", invalid
                 if (thePiece.GetPieceType().ToUpper() != "S")
                 {
                     return -1;
                 }
+
+                //destroy the piece and create a new one given by second command item
                 thePiece.DestroyPiece();
                 if (items[1] == "pbds")
                 {
@@ -300,30 +348,48 @@ namespace HexBaronCS
                 {
                     thePiece = new LESSPiece(player1Turn);
                 }
+
+                //add the new piece, and set the tile to it
                 pieces.Add(thePiece);
                 tiles[tileToUse].SetPiece(thePiece);
+
+                //return 5 - for lumber cost
                 return 5;
             }
         }
 
+        /// <summary>
+        /// Sets up the tiles
+        /// </summary>
         private void SetUpTiles()
         {
+            //TODO: remaining comments
+
+            //sets up starting variables
             int evenStartY = 0;
             int evenStartZ = 0;
             int oddStartZ = 0;
             int oddStartY = -1;
             int x, y, z;
+
+            //for 1..(size/2)
             for (int count = 1; count <= size / 2; count++)
             {
                 y = evenStartY;
                 z = evenStartZ;
+
+                //for x..(size - 2) in increments of 2
                 for (x = 0; x <= size - 2; x += 2)
                 {
+                    //create a new tile at the x, y and z coords
                     Tile tempTile = new Tile(x, y, z);
+
+                    //add the tile to tiles, and decrement y and z by 1
                     tiles.Add(tempTile);
                     y -= 1;
                     z -= 1;
                 }
+
                 evenStartZ += 1;
                 evenStartY -= 1;
                 y = oddStartY;
@@ -340,12 +406,18 @@ namespace HexBaronCS
             }
         }
 
+        /// <summary>
+        /// Sets up the neighbours
+        /// </summary>
         private void SetUpNeighbours()
         {
+            //for each tile
             foreach (var fromTile in tiles)
             {
+                //for all other tiles
                 foreach (var toTile in tiles)
                 {
+                    //if distance is 1, add to list of neighbours
                     if (fromTile.GetDistanceToTileT(toTile) == 1)
                     {
                         fromTile.AddToNeighbours(toTile);
@@ -354,14 +426,25 @@ namespace HexBaronCS
             }
         }
 
+        /// <summary>
+        /// Destroys pieces where required and counts VPs
+        /// </summary>
+        /// <param name="player1VPs">Player 1 VP variable</param>
+        /// <param name="player2VPs">Player 2 VP variable</param>
+        /// <returns>Bool indicating if baron has been destroyed</returns>
         public bool DestroyPiecesAndCountVPs(ref int player1VPs, ref int player2VPs)
         {
+            //creates a bool indicating if baron has been destroyed, and a list of tiles where pieces have been destroyed
             bool baronDestroyed = false;
             List<Tile> listOfTilesContainingDestroyedPieces = new List<Tile>();
+
+            //for every tile
             foreach (var t in tiles)
             {
+                //if the piece isn't null
                 if (t.GetPieceInTile() != null)
                 {
+                    //get a list of neighbours, and increment number of connections for each neighbour with a piece
                     List<Tile> listOfNeighbours = new List<Tile>(t.GetNeighbours());
                     int noOfConnections = 0;
                     foreach (var n in listOfNeighbours)
@@ -371,12 +454,19 @@ namespace HexBaronCS
                             noOfConnections += 1;
                         }
                     }
+
+                    //get the piece in the current tile
                     Piece thePiece = t.GetPieceInTile();
+
+                    //if the number of connections is greater than the number needed to destroy
                     if (noOfConnections >= thePiece.GetConnectionsNeededToDestroy())
                     {
+                        //destroy the tile, and if baron destroyed indicate that with variable
                         thePiece.DestroyPiece();
                         if (thePiece.GetPieceType().ToUpper() == "B")
                             baronDestroyed = true;
+
+                        //add destroyed tile to list, and award VPs to correct player
                         listOfTilesContainingDestroyedPieces.Add(t);
                         if (thePiece.GetBelongsToPlayer1())
                         {
@@ -389,15 +479,26 @@ namespace HexBaronCS
                     }
                 }
             }
+
+            //for each tile that was destroyed, set piece to null
             foreach (var t in listOfTilesContainingDestroyedPieces)
             {
                 t.SetPiece(null);
             }
+
+            //return whether baron destroyed
             return baronDestroyed;
         }
 
+        /// <summary>
+        /// Formats the grid as a string
+        /// </summary>
+        /// <param name="p1Turn">Whether it's player 1s turn</param>
+        /// <returns>Formatted string</returns>
         public string GetGridAsString(bool p1Turn)
         {
+            //TODO: remaining comments
+
             int listPositionOfTile = 0;
             player1Turn = p1Turn;
             string gridAsString = CreateTopLine() + CreateEvenLine(true, ref listPositionOfTile);
@@ -413,14 +514,26 @@ namespace HexBaronCS
             return gridAsString + CreateBottomLine();
         }
 
+        /// <summary>
+        /// Moves a piece from a startIndex <paramref name="oldIndex"/> to an endIndex <paramref name="newIndex"/>
+        /// </summary>
+        /// <param name="newIndex">New index to move to</param>
+        /// <param name="oldIndex">Old index to move from</param>
         private void MovePiece(int newIndex, int oldIndex)
         {
+            //moves the piece
             tiles[newIndex].SetPiece(tiles[oldIndex].GetPieceInTile());
             tiles[oldIndex].SetPiece(null);
         }
 
+        /// <summary>
+        /// Gets the type of piece in a given tile ID
+        /// </summary>
+        /// <param name="ID">ID for tile</param>
+        /// <returns>String representing type of piece</returns>
         public string GetPieceTypeInTile(int ID)
         {
+            //get the piece, if not null return the type of it
             Piece thePiece = tiles[ID].GetPieceInTile();
             if (thePiece == null)
             {
@@ -432,6 +545,10 @@ namespace HexBaronCS
             }
         }
 
+        /// <summary>
+        /// Creates a string with the needed number of bottom hex's
+        /// </summary>
+        /// <returns>Partial formatted string</returns>
         private string CreateBottomLine()
         {
             string line = "   ";
@@ -442,6 +559,10 @@ namespace HexBaronCS
             return line + Environment.NewLine;
         }
 
+        /// <summary>
+        /// Creates a string with the needed number of top hex's
+        /// </summary>
+        /// <returns>Partial formatted string</returns>
         private string CreateTopLine()
         {
             string line = Environment.NewLine + "  ";
