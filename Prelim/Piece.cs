@@ -28,7 +28,7 @@ namespace HexBaronCS
         }
 
         /// <summary>
-        /// Gets the player's VPs
+        /// Gets the VPs awarded when destroyed
         /// </summary>
         /// <returns>VPs</returns>
         public virtual int GetVPs()
