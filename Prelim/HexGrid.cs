@@ -332,7 +332,7 @@ namespace HexBaronCS
                 //fetches piece from grid
                 Piece thePiece = tiles[tileToUse].GetPieceInTile();
 
-                //if piece is "S", invalid
+                //if piece isn't "S", invalid
                 if (thePiece.GetPieceType().ToUpper() != "S")
                 {
                     return -1;
@@ -363,7 +363,12 @@ namespace HexBaronCS
         /// </summary>
         private void SetUpTiles()
         {
-            //TODO: remaining comments
+            /* This is a long method which simply creates a grid, using the follow coordinate system: 
+             *   - x coordinate is the 0-indexed column starting from the left
+             *   - y coordinate is a 0-indexed decreasing diagonal coordinate, going up diagonally from the left. 
+             *   - z coordinate is another 0-indexed diagonal coordinate, going down diagonally from the left.
+             * See Images/hexgrid.png for an example
+             */
 
             //sets up starting variables
             int evenStartY = 0;
@@ -372,13 +377,19 @@ namespace HexBaronCS
             int oddStartY = -1;
             int x, y, z;
 
-            //for 1..(size/2)
+            /* for 1..(size/2)
+             * this is it needs to make both the even and odd rows, so if it goes up to half of size
+             * it can create even and odd to create the correct size.
+             */
             for (int count = 1; count <= size / 2; count++)
             {
+                //prepares variables to start on left
                 y = evenStartY;
                 z = evenStartZ;
 
-                //for x..(size - 2) in increments of 2
+                /* for x..(size - 2) in increments of 2
+                 * this creates a row of tiles starting straight from the left, such as the first, third, fifth, etc. row
+                 */
                 for (x = 0; x <= size - 2; x += 2)
                 {
                     //create a new tile at the x, y and z coords
@@ -390,10 +401,15 @@ namespace HexBaronCS
                     z -= 1;
                 }
 
+                //changes the variables to prepare for rows shifted by one
                 evenStartZ += 1;
                 evenStartY -= 1;
                 y = oddStartY;
                 z = oddStartZ;
+
+                /* for x..(size - 1) starting from 1 in increments of 2
+                 * this creates a row of tiles starting straight one away from the left, such as the second, fourth, etc. row
+                 */
                 for (x = 1; x <= size - 1; x += 2)
                 {
                     Tile tempTile = new Tile(x, y, z);
@@ -401,6 +417,8 @@ namespace HexBaronCS
                     y -= 1;
                     z -= 1;
                 }
+
+                //prepares variables to prepare for next row
                 oddStartZ += 1;
                 oddStartY -= 1;
             }
