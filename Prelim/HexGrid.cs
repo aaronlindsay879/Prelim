@@ -566,9 +566,10 @@ namespace HexBaronCS
         /// <summary>
         /// Creates a string with the needed number of bottom hex's
         /// </summary>
-        /// <returns>Partial formatted string</returns>
+        /// <returns>Partially formatted string</returns>
         private string CreateBottomLine()
         {
+            //simply repeats the bottom of a hex as many times as needed
             string line = "   ";
             for (var count = 1; count <= size / 2; count++)
             {
@@ -580,9 +581,10 @@ namespace HexBaronCS
         /// <summary>
         /// Creates a string with the needed number of top hex's
         /// </summary>
-        /// <returns>Partial formatted string</returns>
+        /// <returns>Partially formatted string</returns>
         private string CreateTopLine()
         {
+            //simply repeats the top of a hex as many times as needed
             string line = Environment.NewLine + "  ";
             for (var count = 1; count <= size / 2; count++)
             {
@@ -591,11 +593,22 @@ namespace HexBaronCS
             return line + Environment.NewLine;
         }
 
+        /// <summary>
+        /// This method creates lines which are shifted off by one, like the second line.
+        /// </summary>
+        /// <param name="listPositionOfTile">Position of the first tile in the list</param>
+        /// <returns>Partially formatted string</returns>
         private string CreateOddLine(ref int listPositionOfTile)
         {
+            /* honestly this function is a mess.
+             * it essentially just creates odd lines (so lines which have been shifted along by one)
+             * the exact mechanisms of how it works will always be unknown to everyone.
+             */
+
             string line = "";
             for (var count = 1; count <= size / 2; count++)
             {
+                //is this supposed to be &&? bitwise and technically works here but is probably unintended
                 if (count > 1 & count < size / 2)
                 {
                     line += GetPieceTypeInTile(listPositionOfTile) + @"\__/";
@@ -607,6 +620,7 @@ namespace HexBaronCS
                     line += @" \__/" + tiles[listPositionOfTile].GetTerrain();
                 }
             }
+
             line += GetPieceTypeInTile(listPositionOfTile) + @"\__/";
             listPositionOfTile += 1;
             if (listPositionOfTile < tiles.Count)
@@ -620,21 +634,32 @@ namespace HexBaronCS
             return line;
         }
 
+        /// <summary>
+        /// This method creates lines which start on the left, like the first line
+        /// </summary>
+        /// <param name="listPositionOfTile">Position of the first tile in the list</param>
+        /// <returns>Partially formatted string</returns>
         private string CreateEvenLine(bool firstEvenLine, ref int listPositionOfTile)
         {
+            //start the first hex and write terrain info from tile
             string line = " /" + tiles[listPositionOfTile].GetTerrain();
+
+            //then write piece in tile, finish the tile grapih off and write the terrain of next tile
             for (var count = 1; count <= size / 2 - 1; count++)
             {
                 line += GetPieceTypeInTile(listPositionOfTile);
                 listPositionOfTile += 1;
                 line += @"\__/" + tiles[listPositionOfTile].GetTerrain();
             }
+
+            //if the first line, then there is no tile above - so can skip last section
             if (firstEvenLine)
             {
                 line += GetPieceTypeInTile(listPositionOfTile) + @"\__" + Environment.NewLine;
             }
             else
             {
+                //otherwise must have last section to join up from tile above
                 line += GetPieceTypeInTile(listPositionOfTile) + @"\__/" + Environment.NewLine;
             }
             return line;
