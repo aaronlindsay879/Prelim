@@ -140,7 +140,7 @@ namespace HexBaronCS
                                                  , " ", " ", "#", "#", "#", "#", "~", "~", "~", "~", "~", " ", "#", " ", "#", " "};
             int gridSize = 8;
             grid = new HexGrid(gridSize);
-            player1 = new Player("Player One", 0, 10, 10, 5);
+            player1 = new Player("Player One", 0, 20, 10, 5);
             player2 = new Player("Player Two", 1, 10, 10, 5);
 
             //setup the grid with the information above
@@ -221,7 +221,7 @@ namespace HexBaronCS
             int result;
             if (items.Count == 3)
             {
-                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS")
+                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "WIZ")
                     return false;
                 try
                 {
@@ -377,6 +377,9 @@ namespace HexBaronCS
                 }
                 else
                     gameOver = grid.DestroyPiecesAndCountVPs(ref player1VPsGained, ref player2VPsGained);
+
+                //resets specials
+                grid.ResetWizards();
 
                 //add the VPs gained to each player
                 player1.AddToVPs(player1VPsGained);

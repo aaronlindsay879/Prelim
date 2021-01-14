@@ -9,7 +9,7 @@ namespace HexBaronCS
     /// </summary>
     class Piece
     {
-        protected bool destroyed, belongsToPlayer1;
+        protected bool destroyed, belongsToPlayer1, specialMovedThisTurn;
         protected int fuelCostOfMove, VPValue, connectionsToDestroy;
         protected string pieceType;
 
@@ -22,6 +22,7 @@ namespace HexBaronCS
             fuelCostOfMove = 1;
             belongsToPlayer1 = player1;
             destroyed = false;
+            specialMovedThisTurn = false;
             pieceType = "S";
             VPValue = 1;
             connectionsToDestroy = 2;
@@ -114,5 +115,11 @@ namespace HexBaronCS
         {
             destroyed = true;
         }
+
+        /// <summary>
+        /// Sets whether piece has used special move this turn
+        /// </summary>
+        /// <param name="special">Bool to set</param>
+        public virtual void SetSpecial(bool special) => specialMovedThisTurn = special;
     }
 }

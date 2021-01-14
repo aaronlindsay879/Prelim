@@ -323,7 +323,7 @@ namespace HexBaronCS
         {
             //gets the tile, checks if it's valid, more than 5 lumber available and piece is either pbds or less
             int tileToUse = Convert.ToInt32(items[2]);
-            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less"))
+            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "wiz"))
             {
                 return -1;
             }
@@ -344,9 +344,13 @@ namespace HexBaronCS
                 {
                     thePiece = new PBDSPiece(player1Turn);
                 }
-                else
+                else if (items[1] == "less")
                 {
                     thePiece = new LESSPiece(player1Turn);
+                }
+                else if (items[1] == "wiz")
+                {
+                    thePiece = new WizardPiece(player1Turn);
                 }
 
                 //add the new piece, and set the tile to it
@@ -663,6 +667,12 @@ namespace HexBaronCS
                 line += GetPieceTypeInTile(listPositionOfTile) + @"\__/" + Environment.NewLine;
             }
             return line;
+        }
+
+        public void ResetWizards()
+        {
+            for (int i = 0; i < pieces.Count; i++)
+                pieces[i].SetSpecial(false);
         }
     }
 }
