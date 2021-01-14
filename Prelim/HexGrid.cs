@@ -664,5 +664,23 @@ namespace HexBaronCS
             }
             return line;
         }
+
+        /// <summary>
+        /// Getter for size
+        /// </summary>
+        /// <returns>Size of grid</returns>
+        public int GetSize() => size;
+
+        /// <summary>
+        /// Getter for tiles
+        /// </summary>
+        /// <returns>List of tiles</returns>
+        public List<Tile> GetTiles() => tiles;
+
+        /// <summary>
+        /// Getter for pieces
+        /// </summary>
+        /// <returns>List of pieces</returns>
+        public List<Piece> GetPieces() => pieces;
     }
 }

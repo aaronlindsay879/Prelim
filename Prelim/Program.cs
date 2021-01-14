@@ -128,6 +128,80 @@ namespace HexBaronCS
         }
 
         /// <summary>
+        /// Saves a game to a file
+        /// </summary>
+        /// <param name="player1">First player</param>
+        /// <param name="player2">Second player</param>
+        /// <param name="grid">Grid</param>
+        /// <returns>Returns bool indicating success</returns>
+        public static bool SaveGame(Player playerOne, Player playerTwo, HexGrid grid)
+        {
+            //gets file to load
+            Console.Write("Enter the name of file to save as: ");
+            string fileName = Console.ReadLine();
+            File.Delete(fileName);
+
+            try
+            {
+                using var sw = new StreamWriter(fileName);
+
+                //write player info
+                sw.WriteLine($"{playerOne.GetName()},{playerOne.GetVPs()},{playerOne.GetFuel()},{playerOne.GetLumber()},{playerOne.GetPiecesInSupply()}");
+                sw.WriteLine($"{playerTwo.GetName()},{playerTwo.GetVPs()},{playerTwo.GetFuel()},{playerTwo.GetLumber()},{playerTwo.GetPiecesInSupply()}");
+
+                //write size of grid
+                sw.WriteLine(grid.GetSize());
+
+                //write terrain
+                //works by getting tiles, finding list of terrain and then interlacing commas
+                sw.WriteLine(grid.GetTiles()
+                                 .Select(x => x.GetTerrain())
+                                 .Aggregate((a, b) => $"{a},{b}"));
+
+                //write pieces
+                List<string> pieceStrings = new List<string>();
+                foreach (var (tile, index) in grid.GetTiles().Select((x, i) => (x, i)))
+                {
+                    Piece piece;
+                    if (tile.GetPieceInTile() != null)
+                        piece = tile.GetPieceInTile();
+                    else
+                        continue;
+
+                    string typeOfPiece = piece.GetPieceType().ToUpper();
+                    string tempStr = "";
+
+                    //add ownership indicator
+                    tempStr += piece.GetBelongsToPlayer1() ? 1 : 2;
+                    tempStr += ",";
+
+                    //add piece indicator
+                    tempStr += typeOfPiece switch
+                    {
+                        "B" => "Baron",
+                        "L" => "LESS",
+                        "P" => "PBDS",
+                        _ => "Serf"
+                    };
+                    tempStr += ",";
+
+                    tempStr += index.ToString();
+
+                    pieceStrings.Add(tempStr);
+                }
+
+                foreach (var str in pieceStrings)
+                    sw.WriteLine(str);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// A method to setup a default game
         /// </summary>
         /// <param name="player1">Player one</param>
@@ -268,6 +342,11 @@ namespace HexBaronCS
                         {
                             return CheckUpgradeCommandFormat(items);
                         }
+
+                    case "save":
+                        {
+                            return true;
+                        }
                 }
             }
             return false;
@@ -310,6 +389,12 @@ namespace HexBaronCS
                     commands.Add(Console.ReadLine().ToLower());
                 }
 
+                if (commands.Any(x => x.ToUpper().Contains("SAVE")))
+                {
+                    Console.Write("Enter command: ");
+                    commands.Add(Console.ReadLine().ToLower());
+                }
+
                 //for each entered command
                 foreach (var c in commands)
                 {
@@ -321,6 +406,8 @@ namespace HexBaronCS
                     //if command is valid, run code for command
                     if (!validCommand)
                         Console.WriteLine("Invalid command");
+                    else if (c.ToUpper().Contains("SAVE"))
+                        SaveGame(player1, player2, grid);
                     else
                     {
                         //setup variables to store changes
